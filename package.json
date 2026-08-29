@@ -1,0 +1,15 @@
+{
+  "name": "rtx-grafana-dashboard",
+  "version": "1.0.0",
+  "description": "Grafana dashboard + monitoring stack for NVIDIA RTX GPUs running vLLM, with per-process GPU activity.",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "python3 scripts/build-rtx-dashboard.py",
+    "validate": "python3 scripts/validate-panels.py",
+    "screenshot": "node scripts/screenshot.js"
+  },
+  "dependencies": {
+    "playwright": "^1.62.1"
+  }
+}

@@ -1,0 +1,11 @@
+[Unit]
+Description=Prometheus Node Exporter
+After=network.target
+
+[Service]
+ExecStart=%h/opt/bin/node_exporter --web.listen-address=:9100
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

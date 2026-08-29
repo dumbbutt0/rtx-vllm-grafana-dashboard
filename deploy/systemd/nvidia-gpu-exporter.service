@@ -1,0 +1,13 @@
+[Unit]
+Description=NVIDIA GPU Prometheus Exporter
+After=network.target
+
+[Service]
+# /usr/lib/wsl/lib is where WSL2 exposes nvidia-smi and libcuda
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/usr/lib/wsl/lib
+ExecStart=%h/opt/bin/nvidia_gpu_exporter --collect.compute-apps --web.listen-address=:9835
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

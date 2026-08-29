@@ -1,0 +1,23 @@
+# Node
+node_modules/
+package-lock.json
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# Rendered screenshots — commit one sample, ignore the rest
+screenshots/*
+!screenshots/.gitkeep
+!screenshots/dashboard.png
+
+# Scratch
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

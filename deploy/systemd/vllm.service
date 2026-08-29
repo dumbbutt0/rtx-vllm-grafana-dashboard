@@ -1,0 +1,20 @@
+[Unit]
+Description=vLLM Inference Server (Qwen2.5-3B-Instruct GPTQ-Int4)
+After=network.target
+
+[Service]
+# WSL2-specific environment (see README "vLLM setup — the WSL2 gotchas").
+#   %h/vllm/lib/python3.12/.../nvidia/cu13  = pip-installed nvcc (nvidia-cuda-nvcc);
+#     adjust the python version to match the venv you create with `uv venv`.
+Environment=PATH=%h/vllm/bin:%h/vllm/lib/python3.12/site-packages/nvidia/cu13/bin:/usr/local/bin:/usr/bin:/bin:/usr/lib/wsl/lib
+Environment=VLLM_WSL2_ENABLE_PIN_MEMORY=1
+Environment=VLLM_USE_FLASHINFER_SAMPLER=0
+Environment=CC=/usr/bin/gcc
+Environment=CXX=/usr/bin/g++
+Environment=CUDA_HOME=%h/vllm/lib/python3.12/site-packages/nvidia/cu13
+ExecStart=%h/vllm/bin/vllm serve %h/models/Qwen2.5-3B-Instruct-GPTQ-Int4 --host 127.0.0.1 --port 8000 --gpu-memory-utilization 0.85 --max-model-len 16384 --optimization-level 0
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

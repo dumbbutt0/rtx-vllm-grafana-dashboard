@@ -1,0 +1,11 @@
+[Unit]
+Description=Harness token usage collector (Pi + Codex + Hermes)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 %h/rtx-grafana-dashboard/scripts/harness_tokens.py --listen 127.0.0.1:9257
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target
