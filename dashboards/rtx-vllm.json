@@ -359,7 +359,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace(vllm:num_requests_running, \"model\", \"$1\", \"model_name\", \".*/([^/]+)$\")",
+          "expr": "label_replace((vllm:num_requests_running and on(instance, job) up{job=\"vllm\"} == 1), \"model\", \"$1\", \"model_name\", \".*/([^/]+)$\")",
           "refId": "A",
           "legendFormat": "{{model}}",
           "editorMode": "code",
@@ -428,7 +428,7 @@
       },
       "targets": [
         {
-          "expr": "vllm:prompt_tokens_total",
+          "expr": "(vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "{{model}}",
           "editorMode": "code",
@@ -497,7 +497,7 @@
       },
       "targets": [
         {
-          "expr": "vllm:generation_tokens_total",
+          "expr": "(vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "{{model}}",
           "editorMode": "code",
@@ -591,7 +591,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase((vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__range])) + sum(increase((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__range]))",
+          "expr": "sum(increase(vllm:prompt_tokens_total[$__range]) and on(instance, job) up{job=\"vllm\"} == 1) + sum(increase(vllm:generation_tokens_total[$__range]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "total tokens",
           "editorMode": "code",
@@ -655,7 +655,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__range]))",
+          "expr": "sum(increase(vllm:generation_tokens_total[$__range]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "output tokens",
           "editorMode": "code",
@@ -719,7 +719,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase((vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__range]))",
+          "expr": "sum(increase(vllm:prompt_tokens_total[$__range]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "input tokens",
           "editorMode": "code",
@@ -783,7 +783,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase((vllm:prompt_tokens_by_source_total{source=\"local_cache_hit\"} and on(instance, job) up{job=\"vllm\"} == 1)[$__range]))",
+          "expr": "sum(increase(vllm:prompt_tokens_by_source_total{source=\"local_cache_hit\"}[$__range]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "legendFormat": "cache-hit tokens",
           "editorMode": "code",
           "refId": "A",
@@ -851,7 +851,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "output/sec",
           "editorMode": "code",
@@ -999,7 +999,7 @@
       },
       "targets": [
         {
-          "expr": "100 * ((sum(rate((vllm:prefix_cache_hits and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])) or sum(rate((vllm:prefix_cache_hits_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])) or vector(0)) / clamp_min((sum(rate((vllm:prefix_cache_queries and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])) or sum(rate((vllm:prefix_cache_queries_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])) or vector(0)), 1))",
+          "expr": "100 * ((sum(rate(vllm:prefix_cache_hits[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1) or sum(rate(vllm:prefix_cache_hits_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1) or vector(0)) / clamp_min((sum(rate(vllm:prefix_cache_queries[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1) or sum(rate(vllm:prefix_cache_queries_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1) or vector(0)), 1))",
           "refId": "A",
           "legendFormat": "prefix hit %",
           "editorMode": "code",
@@ -1076,21 +1076,21 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:time_to_first_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "p50",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate((vllm:time_to_first_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "B",
           "legendFormat": "p95",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate((vllm:time_to_first_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "C",
           "legendFormat": "p99",
           "editorMode": "code",
@@ -1649,7 +1649,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "output tokens/sec",
           "editorMode": "code",
@@ -1769,21 +1769,21 @@
       },
       "targets": [
         {
-          "expr": "sum(rate((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "output t/s",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate((vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:prompt_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "B",
           "legendFormat": "prompt t/s",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])) + sum(rate((vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1) + sum(rate(vllm:prompt_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "C",
           "legendFormat": "total t/s",
           "editorMode": "code",
@@ -1918,14 +1918,14 @@
       },
       "targets": [
         {
-          "expr": "sum(rate((vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:prompt_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "prompt tokens/sec",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "B",
           "legendFormat": "output tokens/sec",
           "editorMode": "code",
@@ -2209,21 +2209,21 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:request_queue_time_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:request_queue_time_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "p50",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate((vllm:request_queue_time_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:request_queue_time_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "B",
           "legendFormat": "p95",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate((vllm:request_queue_time_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:request_queue_time_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "C",
           "legendFormat": "p99",
           "editorMode": "code",
@@ -2373,21 +2373,21 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:e2e_request_latency_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "p50",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate((vllm:e2e_request_latency_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "B",
           "legendFormat": "p95",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate((vllm:e2e_request_latency_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:e2e_request_latency_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "C",
           "legendFormat": "p99",
           "editorMode": "code",
@@ -2537,21 +2537,21 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:inter_token_latency_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))) or histogram_quantile(0.50, sum by (le) (rate((vllm:request_time_per_output_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:inter_token_latency_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)) or histogram_quantile(0.50, sum by (le) (rate(vllm:request_time_per_output_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "p50",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate((vllm:inter_token_latency_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))) or histogram_quantile(0.95, sum by (le) (rate((vllm:request_time_per_output_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:inter_token_latency_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)) or histogram_quantile(0.95, sum by (le) (rate(vllm:request_time_per_output_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "B",
           "legendFormat": "p95",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate((vllm:inter_token_latency_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))) or histogram_quantile(0.99, sum by (le) (rate((vllm:request_time_per_output_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:inter_token_latency_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)) or histogram_quantile(0.99, sum by (le) (rate(vllm:request_time_per_output_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "C",
           "legendFormat": "p99",
           "editorMode": "code",
@@ -2701,14 +2701,14 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:iteration_tokens_total_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:iteration_tokens_total_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "iteration p50 tokens",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate((vllm:iteration_tokens_total_count and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum(rate(vllm:iteration_tokens_total_count[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "B",
           "legendFormat": "iterations/sec",
           "editorMode": "code",
@@ -2858,21 +2858,21 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:request_prompt_tokens_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:request_prompt_tokens_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "p50 prompt tokens",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate((vllm:request_prompt_tokens_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:request_prompt_tokens_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "B",
           "legendFormat": "p95 prompt tokens",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate((vllm:request_prompt_tokens_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:request_prompt_tokens_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "C",
           "legendFormat": "p99 prompt tokens",
           "editorMode": "code",
@@ -2976,21 +2976,21 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.50, sum by (le) (rate((vllm:request_generation_tokens_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(vllm:request_generation_tokens_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "p50 output tokens",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate((vllm:request_generation_tokens_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(vllm:request_generation_tokens_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "B",
           "legendFormat": "p95 output tokens",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "histogram_quantile(0.99, sum by (le) (rate((vllm:request_generation_tokens_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(vllm:request_generation_tokens_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "C",
           "legendFormat": "p99 output tokens",
           "editorMode": "code",
@@ -3094,7 +3094,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (model_name) (rate((vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval]))",
+          "expr": "sum by (model_name) (rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "{{model_name}} output t/s",
           "editorMode": "code",
@@ -3166,7 +3166,7 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum by (le, model_name) (rate((vllm:time_to_first_token_seconds_bucket and on(instance, job) up{job=\"vllm\"} == 1)[$__rate_interval])))",
+          "expr": "histogram_quantile(0.95, sum by (le, model_name) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
           "refId": "A",
           "legendFormat": "{{model_name}} p95 TTFT",
           "editorMode": "code",

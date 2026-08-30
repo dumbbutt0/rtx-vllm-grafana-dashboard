@@ -49,14 +49,29 @@ def apply_repl(s, repls):
 # Gate every vllm:* metric on the target being up, so the whole vLLM section
 # hides the instant no model is serving (vllm counters would otherwise linger
 # in Prometheus for up to ~5 min after vLLM stops).
-VLLM_METRIC_RE = re.compile(r'vllm:[a-zA-Z0-9_:]+(?:\{[^}]*\})?')
+#
+# PromQL gotcha: `[...]` range selectors may ONLY follow a bare vector selector,
+# so `rate((metric and gate)[5m])` is invalid ("ranges only allowed for vector
+# selectors"). Two cases, handled in a single left-to-right regex pass:
+#   1. range-vector functions rate()/increase()/… -> append the gate AFTER the call
+#   2. bare gauges (vllm:X or vllm:X{labels})      -> wrap the selector with the gate
+VLLM_SEL = r'vllm:[a-zA-Z0-9_:]+(?:\{[^}]*\})?'
+_RANGE_FN = r'(?:rate|increase|irate|delta|idelta|deriv|predict_linear)'
+_GATE = ' and on(instance, job) up{job="vllm"} == 1'
+
+_gate_re = re.compile(
+    r'(' + _RANGE_FN + r'\(\s*' + VLLM_SEL + r'\s*\[[^\]]*\]\s*\))'  # full range call
+    r'|' + VLLM_SEL + r'(?!\s*\[)'                                     # bare selector (not a range)
+)
 
 
 def gate_vllm(expr):
-    return VLLM_METRIC_RE.sub(
-        lambda m: '(%s and on(instance, job) up{job="vllm"} == 1)' % m.group(0),
-        expr,
-    )
+    def repl(m):
+        if m.group(1):  # range-vector function call → gate after the call
+            return m.group(1) + _GATE
+        # bare instant-vector selector → wrap
+        return '(%s%s)' % (m.group(0), _GATE)
+    return _gate_re.sub(repl, expr)
 
 
 def walk_exprs(obj):
@@ -284,13 +299,13 @@ def _model_name_stat(title, expr, legend):
 _model_panels = [
     # vLLM: model name (basename), hides when vLLM is down (no series)
     _model_name_stat("VLLM MODEL",
-        'label_replace(vllm:num_requests_running, "model", "$1", "model_name", ".*/([^/]+)$")',
+        gate_vllm('label_replace(vllm:num_requests_running, "model", "$1", "model_name", ".*/([^/]+)$")'),
         "{{model}}"),
-    # vLLM token tracker (cumulative)
+    # vLLM token tracker (cumulative) — gated so it hides when vLLM stops
     clone(stat_tpl, "VLLM TOKENS IN", [6, 6, 0, 8],
-          [("vllm:prompt_tokens_total", "{{model}}")], unit="short"),
+          [(gate_vllm("vllm:prompt_tokens_total"), "{{model}}")], unit="short"),
     clone(stat_tpl, "VLLM TOKENS OUT", [6, 6, 0, 8],
-          [("vllm:generation_tokens_total", "{{model}}")], unit="short"),
+          [(gate_vllm("vllm:generation_tokens_total"), "{{model}}")], unit="short"),
     # Ollama: loaded model name, hides when no model loaded
     _model_name_stat("OLLAMA MODEL", "ollama_model_loaded", "{{model}}"),
 ]
