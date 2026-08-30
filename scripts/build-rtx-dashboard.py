@@ -12,6 +12,7 @@ Adaptations for a consumer NVIDIA RTX (GeForce) GPU in WSL2:
 import json
 import copy
 import os
+import re
 
 # Resolve paths relative to the repo root so the script runs from any cwd.
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,11 +46,27 @@ def apply_repl(s, repls):
     return s
 
 
+# Gate every vllm:* metric on the target being up, so the whole vLLM section
+# hides the instant no model is serving (vllm counters would otherwise linger
+# in Prometheus for up to ~5 min after vLLM stops).
+VLLM_METRIC_RE = re.compile(r'vllm:[a-zA-Z0-9_:]+(?:\{[^}]*\})?')
+
+
+def gate_vllm(expr):
+    return VLLM_METRIC_RE.sub(
+        lambda m: '(%s and on(instance, job) up{job="vllm"} == 1)' % m.group(0),
+        expr,
+    )
+
+
 def walk_exprs(obj):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, str):
-                obj[k] = apply_repl(v, REPLACEMENTS)
+                v = apply_repl(v, REPLACEMENTS)
+                if k == "expr":
+                    v = gate_vllm(v)
+                obj[k] = v
             else:
                 walk_exprs(v)
     elif isinstance(obj, list):
