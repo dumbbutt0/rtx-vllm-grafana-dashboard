@@ -207,7 +207,8 @@ panels.append(clone(stat_tpl, "OLLAMA MODELS LOADED",
                     unit="short"))
 
 # Row 2: per-tool detail (hide-when-inactive). 4 columns of w=6:
-#   pi / codex / hermes -> tokens + cost;  ollama -> loaded model (no token logs)
+#   pi / codex / hermes -> tokens (cost lives in the COST TRACKING row, not here);
+#   ollama -> serving model.
 tools = [("pi", "Pi"), ("codex", "Codex"), ("hermes", "Hermes")]
 for idx, (tool, label) in enumerate(tools):
     x = idx * 6
@@ -216,10 +217,6 @@ for idx, (tool, label) in enumerate(tools):
                         [("harness_tokens_total{harness=\"%s\",direction=\"input\"} and on(harness) harness_active{harness=\"%s\"} == 1" % (tool, tool), "{{harness}} input"),
                          ("harness_tokens_total{harness=\"%s\",direction=\"output\"} and on(harness) harness_active{harness=\"%s\"} == 1" % (tool, tool), "{{harness}} output")],
                         unit="short"))
-    panels.append(clone(stat_tpl, "%s — COST (USD)" % label,
-                        [5, 6, x, 117],
-                        [("harness_cost_usd_total{harness=\"%s\"} and on(harness) harness_active{harness=\"%s\"} == 1" % (tool, tool), "{{harness}}")],
-                        unit="currencyUSD"))
 
 # Ollama (server): no per-request token logs; show which model is serving.
 # ollama_model_loaded only exists while a model is loaded -> hides when idle.
@@ -227,10 +224,23 @@ panels.append(clone(ts_tpl, "Ollama — SERVING",
                         [7, 6, 18, 110],
                         [("ollama_model_loaded", "{{model}}")],
                         unit="short"))
-panels.append(clone(stat_tpl, "Ollama — MODELS INSTALLED",
-                        [5, 6, 18, 117],
-                        [("ollama_models_installed", "models")],
-                        unit="short"))
+
+# Source health: are all the collectors reading OK? (harness_source_success 1/0)
+# Always-visible so a silently-failing source is caught at a glance.
+_p = clone(stat_tpl, "SOURCE FAILURES (0 = all OK)",
+           [6, 12, 0, 122],
+           [("count(harness_source_success == 0) or vector(0)", "failing")],
+           unit="short")
+_p["fieldConfig"]["defaults"]["thresholds"] = {"mode": "absolute", "steps": [
+    {"color": "#76B900", "value": None},   # 0 failures = green
+    {"color": "#E02F44", "value": 1},      # >=1 failure = red
+]}
+panels.append(_p)
+
+panels.append(clone(ts2_tpl, "SOURCE HEALTH (1 = OK, 0 = error)",
+                    [6, 12, 12, 122],
+                    [("harness_source_success", "{{harness}}")],
+                    unit="short"))
 
 # --- 7: remove dead sections from the previous (DGX) version ---
 #  - the 4 cloud-equivalent cost cards (always $0.00; superseded by real token tracking)
@@ -245,7 +255,16 @@ def is_cost_card(p):
 def is_spec_decode(p):
     return "SPEC DECODE" in (p.get("title") or "")
 
-d["panels"] = [p for p in d["panels"] if not is_cost_card(p) and not is_spec_decode(p)]
+
+def is_single_model_redundant(p):
+    # "MODEL * COMPARISON" / "QUEUE PRESSURE" panels sum by (model_name); with a
+    # single served model they duplicate the single-model panels.
+    t = p.get("title") or ""
+    return "COMPARISON" in t or "QUEUE PRESSURE" in t
+
+
+d["panels"] = [p for p in d["panels"]
+               if not is_cost_card(p) and not is_spec_decode(p) and not is_single_model_redundant(p)]
 
 # reflow: compact the grid gap-free (removing the top cards left holes)
 _panels = d["panels"]
@@ -301,11 +320,6 @@ _model_panels = [
     _model_name_stat("VLLM MODEL",
         gate_vllm('label_replace(vllm:num_requests_running, "model", "$1", "model_name", ".*/([^/]+)$")'),
         "{{model}}"),
-    # vLLM token tracker (cumulative) — gated so it hides when vLLM stops
-    clone(stat_tpl, "VLLM TOKENS IN", [6, 6, 0, 8],
-          [(gate_vllm("vllm:prompt_tokens_total"), "{{model}}")], unit="short"),
-    clone(stat_tpl, "VLLM TOKENS OUT", [6, 6, 0, 8],
-          [(gate_vllm("vllm:generation_tokens_total"), "{{model}}")], unit="short"),
     # Ollama: loaded model name, hides when no model loaded
     _model_name_stat("OLLAMA MODEL", "ollama_model_loaded", "{{model}}"),
 ]

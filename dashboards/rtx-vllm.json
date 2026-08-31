@@ -29,7 +29,7 @@
   "links": [],
   "panels": [
     {
-      "id": 90020,
+      "id": 90018,
       "type": "row",
       "title": "COST TRACKING (per tool)",
       "collapsed": false,
@@ -84,7 +84,7 @@
         "textMode": "auto",
         "showPercentChange": false
       },
-      "id": 90021,
+      "id": 90019,
       "title": "Pi COST",
       "gridPos": {
         "h": 6,
@@ -145,7 +145,7 @@
         "textMode": "auto",
         "showPercentChange": false
       },
-      "id": 90022,
+      "id": 90020,
       "title": "Codex COST",
       "gridPos": {
         "h": 6,
@@ -206,7 +206,7 @@
         "textMode": "auto",
         "showPercentChange": false
       },
-      "id": 90023,
+      "id": 90021,
       "title": "Hermes COST",
       "gridPos": {
         "h": 6,
@@ -267,7 +267,7 @@
         "textMode": "auto",
         "showPercentChange": false
       },
-      "id": 90024,
+      "id": 90022,
       "title": "TOTAL COST (all tools)",
       "gridPos": {
         "h": 6,
@@ -286,7 +286,7 @@
       ]
     },
     {
-      "id": 90025,
+      "id": 90023,
       "type": "row",
       "title": "LOCAL MODEL (vLLM / Ollama)",
       "collapsed": false,
@@ -349,7 +349,7 @@
         "textMode": "name",
         "showPercentChange": false
       },
-      "id": 90026,
+      "id": 90024,
       "title": "VLLM MODEL",
       "gridPos": {
         "h": 6,
@@ -360,144 +360,6 @@
       "targets": [
         {
           "expr": "label_replace((vllm:num_requests_running and on(instance, job) up{job=\"vllm\"} == 1), \"model\", \"$1\", \"model_name\", \".*/([^/]+)$\")",
-          "refId": "A",
-          "legendFormat": "{{model}}",
-          "editorMode": "code",
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "links": [],
-      "transforms": [],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": null
-              },
-              {
-                "color": "#FFA500",
-                "value": 70
-              },
-              {
-                "color": "#E02F44",
-                "value": 85
-              }
-            ]
-          },
-          "noValue": "\u2014",
-          "unit": "short",
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "showPercentChange": false
-      },
-      "id": 90027,
-      "title": "VLLM TOKENS IN",
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 6,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "(vllm:prompt_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)",
-          "refId": "A",
-          "legendFormat": "{{model}}",
-          "editorMode": "code",
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "links": [],
-      "transforms": [],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": null
-              },
-              {
-                "color": "#FFA500",
-                "value": 70
-              },
-              {
-                "color": "#E02F44",
-                "value": 85
-              }
-            ]
-          },
-          "noValue": "\u2014",
-          "unit": "short",
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "showPercentChange": false
-      },
-      "id": 90028,
-      "title": "VLLM TOKENS OUT",
-      "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 12,
-        "y": 8
-      },
-      "targets": [
-        {
-          "expr": "(vllm:generation_tokens_total and on(instance, job) up{job=\"vllm\"} == 1)",
           "refId": "A",
           "legendFormat": "{{model}}",
           "editorMode": "code",
@@ -556,12 +418,12 @@
         "textMode": "name",
         "showPercentChange": false
       },
-      "id": 90029,
+      "id": 90025,
       "title": "OLLAMA MODEL",
       "gridPos": {
         "h": 6,
         "w": 6,
-        "x": 18,
+        "x": 6,
         "y": 8
       },
       "targets": [
@@ -3073,229 +2935,6 @@
           "mode": "multi",
           "sort": "desc"
         }
-      },
-      "links": [],
-      "transforms": []
-    },
-    {
-      "id": 21,
-      "type": "bargauge",
-      "title": "MODEL THROUGHPUT COMPARISON",
-      "description": "Useful when you temporarily run or compare multiple vLLM model names.",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 52
-      },
-      "targets": [
-        {
-          "expr": "sum by (model_name) (rate(vllm:generation_tokens_total[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1)",
-          "refId": "A",
-          "legendFormat": "{{model_name}} output t/s",
-          "editorMode": "code",
-          "range": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "#76B900",
-            "mode": "fixed"
-          },
-          "noValue": "\u2014",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "tps"
-        },
-        "overrides": []
-      },
-      "options": {
-        "displayMode": "lcd",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "overflow": "ellipsis",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
-      },
-      "links": [],
-      "transforms": []
-    },
-    {
-      "id": 22,
-      "type": "bargauge",
-      "title": "MODEL TTFT P95 COMPARISON",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 52
-      },
-      "targets": [
-        {
-          "expr": "histogram_quantile(0.95, sum by (le, model_name) (rate(vllm:time_to_first_token_seconds_bucket[$__rate_interval]) and on(instance, job) up{job=\"vllm\"} == 1))",
-          "refId": "A",
-          "legendFormat": "{{model_name}} p95 TTFT",
-          "editorMode": "code",
-          "range": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "#76B900",
-            "mode": "fixed"
-          },
-          "noValue": "\u2014",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {
-        "displayMode": "lcd",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "overflow": "ellipsis",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
-      },
-      "links": [],
-      "transforms": []
-    },
-    {
-      "id": 23,
-      "type": "bargauge",
-      "title": "MODEL QUEUE PRESSURE",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 0,
-        "y": 59
-      },
-      "targets": [
-        {
-          "expr": "sum by (model_name) ((vllm:num_requests_waiting and on(instance, job) up{job=\"vllm\"} == 1))",
-          "refId": "A",
-          "legendFormat": "{{model_name}} waiting",
-          "editorMode": "code",
-          "range": true
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "noValue": "\u2014",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": 0
-              },
-              {
-                "color": "#E5C100",
-                "value": 1
-              },
-              {
-                "color": "#FF4D4D",
-                "value": 3
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {
-        "displayMode": "lcd",
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "overflow": "ellipsis",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "maxVizHeight": 300,
-        "minVizHeight": 10,
-        "minVizWidth": 0,
-        "namePlacement": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showUnfilled": true,
-        "sizing": "auto",
-        "valueMode": "color"
       },
       "links": [],
       "transforms": []
@@ -6286,7 +5925,7 @@
           "sort": "none"
         }
       },
-      "id": 90014,
+      "id": 90013,
       "title": "Codex \u2014 TOKENS (input/output)",
       "gridPos": {
         "h": 7,
@@ -6395,7 +6034,7 @@
           "sort": "none"
         }
       },
-      "id": 90016,
+      "id": 90014,
       "title": "Hermes \u2014 TOKENS (input/output)",
       "gridPos": {
         "h": 7,
@@ -6504,7 +6143,7 @@
           "sort": "none"
         }
       },
-      "id": 90018,
+      "id": 90015,
       "title": "Ollama \u2014 SERVING",
       "gridPos": {
         "h": 7,
@@ -6543,219 +6182,8 @@
                 "value": null
               },
               {
-                "color": "#FFA500",
-                "value": 70
-              },
-              {
                 "color": "#E02F44",
-                "value": 85
-              }
-            ]
-          },
-          "noValue": "\u2014",
-          "unit": "currencyUSD",
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "showPercentChange": false
-      },
-      "id": 90013,
-      "title": "Pi \u2014 COST (USD)",
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 0,
-        "y": 129
-      },
-      "targets": [
-        {
-          "expr": "harness_cost_usd_total{harness=\"pi\"} and on(harness) harness_active{harness=\"pi\"} == 1",
-          "refId": "A",
-          "legendFormat": "{{harness}}",
-          "editorMode": "code",
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "links": [],
-      "transforms": [],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": null
-              },
-              {
-                "color": "#FFA500",
-                "value": 70
-              },
-              {
-                "color": "#E02F44",
-                "value": 85
-              }
-            ]
-          },
-          "noValue": "\u2014",
-          "unit": "currencyUSD",
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "showPercentChange": false
-      },
-      "id": 90015,
-      "title": "Codex \u2014 COST (USD)",
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 6,
-        "y": 129
-      },
-      "targets": [
-        {
-          "expr": "harness_cost_usd_total{harness=\"codex\"} and on(harness) harness_active{harness=\"codex\"} == 1",
-          "refId": "A",
-          "legendFormat": "{{harness}}",
-          "editorMode": "code",
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "links": [],
-      "transforms": [],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": null
-              },
-              {
-                "color": "#FFA500",
-                "value": 70
-              },
-              {
-                "color": "#E02F44",
-                "value": 85
-              }
-            ]
-          },
-          "noValue": "\u2014",
-          "unit": "currencyUSD",
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto",
-        "showPercentChange": false
-      },
-      "id": 90017,
-      "title": "Hermes \u2014 COST (USD)",
-      "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 12,
-        "y": 129
-      },
-      "targets": [
-        {
-          "expr": "harness_cost_usd_total{harness=\"hermes\"} and on(harness) harness_active{harness=\"hermes\"} == 1",
-          "refId": "A",
-          "legendFormat": "{{harness}}",
-          "editorMode": "code",
-          "range": true
-        }
-      ]
-    },
-    {
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "links": [],
-      "transforms": [],
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#76B900",
-                "value": null
-              },
-              {
-                "color": "#FFA500",
-                "value": 70
-              },
-              {
-                "color": "#E02F44",
-                "value": 85
+                "value": 1
               }
             ]
           },
@@ -6780,19 +6208,121 @@
         "textMode": "auto",
         "showPercentChange": false
       },
-      "id": 90019,
-      "title": "Ollama \u2014 MODELS INSTALLED",
+      "id": 90016,
+      "title": "SOURCE FAILURES (0 = all OK)",
       "gridPos": {
-        "h": 5,
-        "w": 6,
-        "x": 18,
+        "h": 6,
+        "w": 12,
+        "x": 0,
         "y": 129
       },
       "targets": [
         {
-          "expr": "ollama_models_installed",
+          "expr": "count(harness_source_success == 0) or vector(0)",
           "refId": "A",
-          "legendFormat": "models",
+          "legendFormat": "failing",
+          "editorMode": "code",
+          "range": true
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "links": [],
+      "transforms": [],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 4,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "showValues": false,
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "noValue": "\u2014",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#76B900",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "annotations": {
+          "clustering": -1,
+          "multiLane": false
+        },
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "mean",
+            "max"
+          ],
+          "displayMode": "table",
+          "enableFacetedFilter": false,
+          "overflow": "ellipsis",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "id": 90017,
+      "title": "SOURCE HEALTH (1 = OK, 0 = error)",
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 129
+      },
+      "targets": [
+        {
+          "expr": "harness_source_success",
+          "refId": "A",
+          "legendFormat": "{{harness}}",
           "editorMode": "code",
           "range": true
         }
