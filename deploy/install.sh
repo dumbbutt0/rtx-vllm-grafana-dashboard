@@ -61,11 +61,12 @@ echo "==> Prometheus ${PROMETHEUS}"
 curl -fsSL -o "$TMP_DIR/prometheus.tgz" "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS}/prometheus-${PROMETHEUS}.${ARCH}.tar.gz"
 verify_sha256 "$PROMETHEUS_SHA256" "$TMP_DIR/prometheus.tgz"
 tar xzf "$TMP_DIR/prometheus.tgz" -C "$TMP_DIR"
-mkdir -p "$PROMETHEUS_HOME" "$PROMETHEUS_CONFIG/targets" "$PROMETHEUS_DATA"
-if [[ -d "$OPT/prometheus/data" ]] && [[ -z "$(find "$PROMETHEUS_DATA" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
-  echo "==> migrating legacy Prometheus data"
-  cp -a "$OPT/prometheus/data/." "$PROMETHEUS_DATA/"
+mkdir -p "$PROMETHEUS_HOME" "$PROMETHEUS_CONFIG/targets"
+if [[ -d "$OPT/prometheus/data" ]] && [[ ! -e "$PROMETHEUS_DATA" ]]; then
+  echo "==> retaining legacy Prometheus data in place"
+  ln -s "$OPT/prometheus/data" "$PROMETHEUS_DATA"
 fi
+mkdir -p "$PROMETHEUS_DATA"
 cp -R "$TMP_DIR/prometheus-${PROMETHEUS}.${ARCH}/." "$PROMETHEUS_HOME/"
 install -m 0644 "$HERE/prometheus.yml" "$PROMETHEUS_CONFIG/prometheus.yml"
 install -m 0644 "$HERE/targets/"*.yml "$PROMETHEUS_CONFIG/targets/"
@@ -78,10 +79,9 @@ tar xzf "$TMP_DIR/grafana.tgz" -C "$TMP_DIR"
 mkdir -p "$GRAFANA_HOME"
 cp -R "$TMP_DIR/grafana-v${GRAFANA}/." "$GRAFANA_HOME/"
 GRAFANA_DB_MIGRATED=0
-if [[ -f "$OPT/grafana/data/grafana.db" ]] && [[ ! -f "$GRAFANA_HOME/data/grafana.db" ]]; then
-  echo "==> migrating legacy Grafana data and credentials"
-  mkdir -p "$GRAFANA_HOME/data"
-  cp -a "$OPT/grafana/data/." "$GRAFANA_HOME/data/"
+if [[ -f "$OPT/grafana/data/grafana.db" ]] && [[ ! -e "$GRAFANA_HOME/data" ]]; then
+  echo "==> retaining legacy Grafana data and credentials in place"
+  ln -s "$OPT/grafana/data" "$GRAFANA_HOME/data"
   GRAFANA_DB_MIGRATED=1
 fi
 
