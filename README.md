@@ -62,9 +62,15 @@ The **GPU Activity** row is the reason this works for *any* app, not just vLLM: 
 ./deploy/install.sh
 ```
 
-Installs node_exporter, nvidia_gpu_exporter, Prometheus, and Grafana to `~/opt/`, drops the
-`deploy/systemd/*.service` units into `~/.config/systemd/user/`, writes `prometheus.yml` and the
-Grafana provisioning files, and enables all four services.
+Installs version-pinned node_exporter, nvidia_gpu_exporter, Prometheus, and Grafana under
+`~/opt/`, provisions the target files and dashboard JSON, renders the user-level systemd units,
+and enables the five monitoring services. Application versions are installed side-by-side;
+Prometheus history is kept separately in `~/opt/prometheus-data/` so upgrades do not erase it.
+
+All web endpoints bind to `127.0.0.1`. On first install, Grafana receives a random admin password,
+printed once and stored with mode 600 in `~/.config/rtx-vllm-grafana/grafana.env`. Set
+`GRAFANA_ADMIN_PASSWORD` before running the installer if you want to provide your own initial
+password. The optional vLLM service is not enabled automatically.
 
 ### 2. vLLM (one-time, needs `build-essential`)
 
@@ -84,16 +90,24 @@ systemctl --user enable --now vllm
 ## Verify
 
 ```bash
-# 1. deterministic: run every panel's PromQL through Grafana's own engine
-python3 scripts/validate-panels.py          # expect ~48/50 HAS-DATA, 2 EMPTY (spec-decode, off)
+# 1. offline release-integrity checks (also run in GitHub Actions)
+python3 scripts/check-release.py
 
-# 2. pixel-level: screenshot the rendered dashboard and eyeball it
-npm install && npx playwright install chromium && npx playwright install-deps chromium
+# 2. live: run every panel's PromQL through Grafana's own engine
+python3 scripts/validate-panels.py
+
+# 3. pixel-level: screenshot the rendered dashboard and inspect it
+npm ci
+npx playwright install chromium
+npx playwright install-deps chromium
 node scripts/screenshot.js                  # writes screenshots/dashboard.png
 ```
 
-The validator is the authoritative "does it compute" gate; the screenshot catches the
-pixel-level stuff (units, thresholds, branding) that a data-only check can't.
+The offline check catches packaging and wiring regressions without requiring a GPU. The live
+validator proves that queries parse and return data against the machine on which it is run; its
+counts depend on which optional tools and model servers are active. The screenshot catches
+pixel-level problems that a data-only check cannot. A successful CI run alone is not evidence that
+the full stack was exercised on fresh WSL2 hardware.
 
 ---
 
@@ -198,6 +212,20 @@ deploy/
   systemd/…                  # node-exporter, nvidia-gpu-exporter, prometheus, grafana, vllm, harness-tokens
 screenshots/                 # sample renders
 ```
+
+## Release scope
+
+This project is intended to ship first as a preview for WSL2 systems with NVIDIA CUDA passthrough.
+Before tagging a release, verify the installer from a clean WSL2 user account, confirm every
+Prometheus target is healthy, run both validators, and inspect the generated screenshots. CI is an
+offline integrity gate and does not replace that hardware smoke test.
+
+## Security
+
+The default services are loopback-only. Do not change them to `:PORT` or `0.0.0.0:PORT` unless
+you also add appropriate authentication and firewall policy. The token exporter reads local tool
+session metadata and must not be exposed to untrusted networks. Report security-sensitive issues
+privately to the repository owner rather than opening a public issue.
 
 ## Attribution
 
