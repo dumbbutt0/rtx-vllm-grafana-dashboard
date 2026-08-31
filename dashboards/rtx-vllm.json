@@ -328,7 +328,7 @@
               }
             ]
           },
-          "noValue": "\u2014",
+          "noValue": "not running",
           "unit": "celsius",
           "mappings": []
         },
@@ -397,7 +397,7 @@
               }
             ]
           },
-          "noValue": "\u2014",
+          "noValue": "not running",
           "unit": "celsius",
           "mappings": []
         },
@@ -5779,7 +5779,7 @@
               "mode": "off"
             }
           },
-          "noValue": "\u2014",
+          "noValue": "not running",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -5888,7 +5888,7 @@
               "mode": "off"
             }
           },
-          "noValue": "\u2014",
+          "noValue": "not running",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -5997,7 +5997,7 @@
               "mode": "off"
             }
           },
-          "noValue": "\u2014",
+          "noValue": "not running",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -6106,7 +6106,7 @@
               "mode": "off"
             }
           },
-          "noValue": "\u2014",
+          "noValue": "not running",
           "thresholds": {
             "mode": "absolute",
             "steps": [

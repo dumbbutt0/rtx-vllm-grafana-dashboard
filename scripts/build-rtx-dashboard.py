@@ -130,7 +130,7 @@ def next_id():
     max_id += 1
     return max_id
 
-def clone(src, title, grid, targets, unit=None, legend=None):
+def clone(src, title, grid, targets, unit=None, legend=None, noValue=None):
     p = copy.deepcopy(src)
     p["id"] = next_id()
     p["title"] = title
@@ -144,6 +144,8 @@ def clone(src, title, grid, targets, unit=None, legend=None):
                              "editorMode": "code", "range": True})
     if unit:
         p["fieldConfig"]["defaults"]["unit"] = unit
+    if noValue is not None:
+        p["fieldConfig"]["defaults"]["noValue"] = noValue
     return p
 
 # New stat: GPU MEMORY USED
@@ -216,14 +218,14 @@ for idx, (tool, label) in enumerate(tools):
                         [7, 6, x, 110],
                         [("harness_tokens_total{harness=\"%s\",direction=\"input\"} and on(harness) harness_active{harness=\"%s\"} == 1" % (tool, tool), "{{harness}} input"),
                          ("harness_tokens_total{harness=\"%s\",direction=\"output\"} and on(harness) harness_active{harness=\"%s\"} == 1" % (tool, tool), "{{harness}} output")],
-                        unit="short"))
+                        unit="short", noValue="not running"))
 
 # Ollama (server): no per-request token logs; show which model is serving.
 # ollama_model_loaded only exists while a model is loaded -> hides when idle.
 panels.append(clone(ts_tpl, "Ollama — SERVING",
                         [7, 6, 18, 110],
                         [("ollama_model_loaded", "{{model}}")],
-                        unit="short"))
+                        unit="short", noValue="not running"))
 
 # Source health: are all the collectors reading OK? (harness_source_success 1/0)
 # Always-visible so a silently-failing source is caught at a glance.
@@ -310,7 +312,7 @@ _model_row = {"id": next_id(), "type": "row", "title": "LOCAL MODEL (vLLM / Olla
 
 def _model_name_stat(title, expr, legend):
     # a stat that renders the series NAME (the model) as its text, not a number
-    _p = clone(stat_tpl, title, [6, 6, 0, 8], [(expr, legend)])
+    _p = clone(stat_tpl, title, [6, 6, 0, 8], [(expr, legend)], noValue="not running")
     _p["options"]["textMode"] = "name"
     _p["options"]["reduceOptions"] = {"calcs": ["lastNotNull"], "fields": "", "values": False}
     return _p
