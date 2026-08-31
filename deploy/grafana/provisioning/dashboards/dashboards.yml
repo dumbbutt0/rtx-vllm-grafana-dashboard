@@ -5,9 +5,9 @@ providers:
     orgId: 1
     folder: RTX
     type: file
-    disableDeletion: false
-    allowUiUpdates: true
+    disableDeletion: true
+    allowUiUpdates: false
     updateIntervalSeconds: 30
     options:
       # __HOME__ is substituted by deploy/install.sh at install time.
-      path: __HOME__/opt/grafana/conf/provisioning/dashboards
+      path: __HOME__/opt/grafana-current/conf/provisioning/dashboards
