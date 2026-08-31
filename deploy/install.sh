@@ -77,7 +77,7 @@ curl -fsSL -o "$TMP_DIR/grafana.tgz" "https://dl.grafana.com/grafana/release/${G
 verify_sha256 "$GRAFANA_SHA256" "$TMP_DIR/grafana.tgz"
 tar xzf "$TMP_DIR/grafana.tgz" -C "$TMP_DIR"
 mkdir -p "$GRAFANA_HOME"
-cp -R "$TMP_DIR/grafana-v${GRAFANA}/." "$GRAFANA_HOME/"
+cp -R "$TMP_DIR/grafana-${GRAFANA}/." "$GRAFANA_HOME/"
 GRAFANA_DB_MIGRATED=0
 if [[ -f "$OPT/grafana/data/grafana.db" ]] && [[ ! -e "$GRAFANA_HOME/data" ]]; then
   echo "==> retaining legacy Grafana data and credentials in place"
