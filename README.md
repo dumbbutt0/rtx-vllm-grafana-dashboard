@@ -150,6 +150,13 @@ isn't running** — driven by a `harness_active` flag (recent activity OR runnin
 | Ollama | `localhost:11434/api/tags` + `/api/ps` | **no token metrics** — shows installed + loaded models only |
 | Claude Code | OTLP `prometheus` exporter (`:9464`) | accurate; JSONL is broken (~100× undercount). See below. |
 
+**Graceful errors:** every source is read independently — a missing/​unreadable source (Pi's
+dir gone, Hermes DB locked, Ollama not installed, a session file mid-write) degrades to empty
+data rather than failing the scrape. The collector always returns HTTP 200, and emits
+`harness_source_success{harness="…"}` (1/0) so a failing source is visible, never silent.
+`harness_scrape_error` (1) flags a catastrophic render failure; the `/metrics` endpoint never
+drops the connection.
+
 **Claude Code caveat:** its JSONL `usage.input_tokens` is a known-unfixed placeholder (undercounts
 ~100×). The reliable path is OTLP — set in `~/.bashrc` (already added by the installer):
 

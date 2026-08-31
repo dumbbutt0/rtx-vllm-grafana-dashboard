@@ -24,6 +24,7 @@ Usage:
   python3 harness_tokens.py --listen :9257 [--window 900] [--hermes-db PATH]
 """
 import argparse, glob, json, os, sqlite3, time, subprocess, shutil, tempfile
+import sys, traceback
 import urllib.request
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
@@ -150,9 +151,12 @@ def _pi_parse(path):
 def collect_pi():
     agg = {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0, "reasoning": 0, "cost": 0}
     last = 0
-    files = glob.glob(os.path.expanduser("~/.pi/agent/sessions") + "/**/*.jsonl", recursive=True)
+    base = os.path.expanduser("~/.pi/agent/sessions")
+    if not os.path.isdir(base):
+        return [("pi", "pi", agg)], 0   # no sessions dir yet → graceful empty
+    files = glob.glob(base + "/**/*.jsonl", recursive=True)
     for f in files:
-        last = max(last, os.path.getmtime(f))
+        last = max(last, newest_mtime([f]))
         d = cached(f, _pi_parse)
         if d:
             for k in agg:
@@ -348,12 +352,25 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if urlparse(self.path).path != "/metrics":
             self.send_response(404); self.end_headers(); return
-        data = self.server.render_fn().encode()
+        try:
+            data = self.server.render_fn().encode()
+        except Exception:
+            # Never fail the scrape: on catastrophic error, return a valid
+            # minimal body flagging the failure so Prometheus records it cleanly.
+            traceback.print_exc()
+            data = (
+                "# HELP harness_scrape_error 1 when the collector could not render metrics.\n"
+                "# TYPE harness_scrape_error gauge\n"
+                "harness_scrape_error 1\n"
+            ).encode()
         self.send_response(200)
         self.send_header("Content-Type", "text/plain; version=0.0.4")
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
-        self.wfile.write(data)
+        try:
+            self.wfile.write(data)
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # client went away mid-scrape; harmless
 
     def log_message(self, *a):
         pass
@@ -379,37 +396,71 @@ def main():
 
     _load_cache()
 
+    SOURCES = ["pi", "codex", "hermes", "ollama"]
+
     def render_fn():
         entries = []
         active = {}
+        source_ok = {s: True for s in SOURCES}
 
-        pe, pl = collect_pi()
-        entries.extend(pe)
-        active["pi"] = pl
+        def guarded(name, fn, *a):
+            try:
+                return fn(*a)
+            except Exception:
+                source_ok[name] = False
+                traceback.print_exc()
+                return None
 
-        ce, cl = collect_codex()
-        entries.extend(ce)
-        active["codex"] = cl
+        pe = guarded("pi", collect_pi)
+        if pe:
+            entries.extend(pe[0]); active["pi"] = pe[1]
+        else:
+            active["pi"] = 0
 
-        he, hl = collect_hermes(hermes_db)
-        for model, d in he:
-            entries.append(("hermes", model, d))
-        active["hermes"] = hl
+        ce = guarded("codex", collect_codex)
+        if ce:
+            entries.extend(ce[0]); active["codex"] = ce[1]
+        else:
+            active["codex"] = 0
 
-        _save_cache()
+        he = guarded("hermes", collect_hermes, hermes_db)
+        if he:
+            for model, d in he[0]:
+                entries.append(("hermes", model, d))
+            active["hermes"] = he[1]
+        else:
+            active["hermes"] = 0
+
+        try:
+            _save_cache()
+        except Exception:
+            pass
+
         out = render(entries, active, args.window)
-        # Ollama: separate metrics + a harness_active flag so it joins "ACTIVE APPS NOW"
-        oa, oi, ol = collect_ollama()
+
+        oa, oi, ol = guarded("ollama", collect_ollama) or (0, 0, [])
         out += "\n".join(ollama_lines(oa, oi, ol)) + "\n"
         out += 'harness_active{harness="ollama"} %d\n' % oa
+
+        # Per-source health, so a silent failure is still visible in the dashboard.
+        out += "# HELP harness_source_success 1 if this tool's data was read OK, 0 if it errored.\n"
+        out += "# TYPE harness_source_success gauge\n"
+        for s in SOURCES:
+            out += 'harness_source_success{harness="%s"} %d\n' % (s, 1 if source_ok[s] else 0)
+
         return out
 
     # Warm the cache once before serving so the first scrape isn't a ~45s
-    # blocking parse of hundreds of session files.
+    # blocking parse of hundreds of session files. A failure here must not
+    # crash the service — log it and continue serving (render_fn will retry).
     print("warming cache (first collection pass)...")
     t0 = now()
-    render_fn()
-    print("warm-up complete in %.1fs" % (now() - t0))
+    try:
+        render_fn()
+        print("warm-up complete in %.1fs" % (now() - t0))
+    except Exception:
+        traceback.print_exc()
+        print("warm-up failed (will retry on first scrape)")
 
     srv = HTTPServer((host, port), Handler)
     srv.render_fn = render_fn
