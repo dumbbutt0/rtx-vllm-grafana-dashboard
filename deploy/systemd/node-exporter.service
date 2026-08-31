@@ -3,9 +3,13 @@ Description=Prometheus Node Exporter
 After=network.target
 
 [Service]
-ExecStart=%h/opt/bin/node_exporter --web.listen-address=:9100
+ExecStart=%h/opt/bin/node_exporter --web.listen-address=127.0.0.1:9100
 Restart=always
 RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
 
 [Install]
 WantedBy=default.target

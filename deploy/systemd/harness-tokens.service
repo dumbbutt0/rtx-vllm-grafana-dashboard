@@ -1,11 +1,16 @@
 [Unit]
-Description=Harness token usage collector (Pi + Codex + Hermes)
+Description=Harness token usage collector (Pi + Codex + Hermes + Ollama)
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 %h/rtx-grafana-dashboard/scripts/harness_tokens.py --listen 127.0.0.1:9257
+ExecStart=/usr/bin/python3 __REPO_ROOT__/scripts/harness_tokens.py --listen 127.0.0.1:9257
 Restart=always
 RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.cache
 
 [Install]
 WantedBy=default.target

@@ -1,0 +1,30 @@
+name: release-integrity
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-integrity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: bash -n deploy/install.sh
+      - run: python3 -m py_compile scripts/*.py
+      - run: node --check scripts/screenshot.js
+      - run: python3 scripts/check-release.py
+      - run: npm ci --ignore-scripts
+      - name: Generated dashboard is committed and current
+        run: |
+          python3 scripts/build-rtx-dashboard.py
+          git diff --exit-code -- dashboards/rtx-vllm.json

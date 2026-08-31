@@ -2,6 +2,8 @@
 
 A Grafana dashboard and self-contained monitoring stack for **any NVIDIA RTX (GeForce) GPU** running [vLLM](https://github.com/vllm-project/vllm), plus per-process GPU activity so you can see *what's using your GPU right now* — and a **per-tool token tracker** for Pi, Codex (CLI + desktop app), Hermes, Claude Code, and Ollama.
 
+> **New installation?** Start with the copy-paste [WSL2 quickstart](QUICKSTART.md).
+
 Ported from [`RodriMora/dgx-spark-grafana-dashboard`](https://github.com/RodriMora/dgx-spark-grafana-dashboard) (which targeted the NVIDIA **DGX Spark**, a GB10 workstation). That original assumes DGX-only telemetry — thermal-limit, throttle-reason counters, unified CPU/GPU memory — none of which exist on a consumer GeForce card. This fork adapts it to RTX, adds a "GPU Activity" row and a "Apps in use & tokens" row, and drops the dead sections (cloud-equivalent cost cards, spec-decode panels).
 
 ![dashboard](screenshots/dashboard.png)
@@ -50,11 +52,13 @@ The **GPU Activity** row is the reason this works for *any* app, not just vLLM: 
 | Prometheus | → `:9090` |
 | Grafana | → `:3001` (3000 is commonly taken) |
 | vLLM + a quantized model | see [vLLM setup](#vllm-setup) |
-| `build-essential` (gcc/g++/make) | one-time, for vLLM's JIT kernels |
+| `uv` + `build-essential` | optional; required only for the vLLM setup |
 
 ---
 
 ## Install
+
+For a first installation, follow [QUICKSTART.md](QUICKSTART.md). The condensed commands below assume the repository is already cloned and the prerequisites have passed.
 
 ### 1. Monitoring stack (sudo-free)
 
@@ -62,9 +66,15 @@ The **GPU Activity** row is the reason this works for *any* app, not just vLLM: 
 ./deploy/install.sh
 ```
 
-Installs node_exporter, nvidia_gpu_exporter, Prometheus, and Grafana to `~/opt/`, drops the
-`deploy/systemd/*.service` units into `~/.config/systemd/user/`, writes `prometheus.yml` and the
-Grafana provisioning files, and enables all four services.
+Installs version-pinned node_exporter, nvidia_gpu_exporter, Prometheus, and Grafana under
+`~/opt/`, provisions the target files and dashboard JSON, renders the user-level systemd units,
+and enables the five monitoring services. Application versions are installed side-by-side;
+Prometheus history is kept separately in `~/opt/prometheus-data/` so upgrades do not erase it.
+
+All web endpoints bind to `127.0.0.1`. On first install, Grafana receives a random admin password,
+printed once and stored with mode 600 in `~/.config/rtx-vllm-grafana/grafana.env`. Set
+`GRAFANA_ADMIN_PASSWORD` before running the installer if you want to provide your own initial
+password. The optional vLLM service is not enabled automatically.
 
 ### 2. vLLM (one-time, needs `build-essential`)
 
@@ -84,16 +94,24 @@ systemctl --user enable --now vllm
 ## Verify
 
 ```bash
-# 1. deterministic: run every panel's PromQL through Grafana's own engine
-python3 scripts/validate-panels.py          # expect ~48/50 HAS-DATA, 2 EMPTY (spec-decode, off)
+# 1. offline release-integrity checks (also run in GitHub Actions)
+python3 scripts/check-release.py
 
-# 2. pixel-level: screenshot the rendered dashboard and eyeball it
-npm install && npx playwright install chromium && npx playwright install-deps chromium
+# 2. live: run every panel's PromQL through Grafana's own engine
+python3 scripts/validate-panels.py
+
+# 3. pixel-level: screenshot the rendered dashboard and inspect it
+npm ci
+npx playwright install chromium
+npx playwright install-deps chromium
 node scripts/screenshot.js                  # writes screenshots/dashboard.png
 ```
 
-The validator is the authoritative "does it compute" gate; the screenshot catches the
-pixel-level stuff (units, thresholds, branding) that a data-only check can't.
+The offline check catches packaging and wiring regressions without requiring a GPU. The live
+validator proves that queries parse and return data against the machine on which it is run; its
+counts depend on which optional tools and model servers are active. The screenshot catches
+pixel-level problems that a data-only check cannot. A successful CI run alone is not evidence that
+the full stack was exercised on fresh WSL2 hardware.
 
 ---
 
@@ -156,7 +174,9 @@ profile); override with the `CODEX_HOME` / `HERMES_HOME` env vars if your layout
 > **Cost figures are estimates.** `harness_cost_usd_total` comes from each tool's own
 > `estimated_cost_usd`/`cost` fields, which are pricing-table estimates that can drift
 > between sessions (and Codex reports $0 — it doesn't emit pricing). Treat them as
-> directional, not billing-accurate. Token counts are authoritative.
+> directional, not billing-accurate. Pi and Hermes totals reflect their local records; Codex is a
+recent-activity estimate assembled from the latest per-turn usage in rollouts touched within 24
+hours. None of these metrics should be treated as a billing ledger.
 
 **Graceful errors:** every source is read independently — a missing/​unreadable source (Pi's
 dir gone, Hermes DB locked, Ollama not installed, a session file mid-write) degrades to empty
@@ -166,7 +186,7 @@ data rather than failing the scrape. The collector always returns HTTP 200, and 
 drops the connection.
 
 **Claude Code caveat:** its JSONL `usage.input_tokens` is a known-unfixed placeholder (undercounts
-~100×). The reliable path is OTLP — set in `~/.bashrc` (already added by the installer):
+~100×). The reliable path is OTLP. Add the following to your shell environment if you use Claude Code telemetry:
 
 ```bash
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
@@ -198,6 +218,20 @@ deploy/
   systemd/…                  # node-exporter, nvidia-gpu-exporter, prometheus, grafana, vllm, harness-tokens
 screenshots/                 # sample renders
 ```
+
+## Release scope
+
+This project is intended to ship first as a preview for WSL2 systems with NVIDIA CUDA passthrough.
+Before tagging a release, verify the installer from a clean WSL2 user account, confirm every
+Prometheus target is healthy, run both validators, and inspect the generated screenshots. CI is an
+offline integrity gate and does not replace that hardware smoke test.
+
+## Security
+
+The default services are loopback-only. Do not change them to `:PORT` or `0.0.0.0:PORT` unless
+you also add appropriate authentication and firewall policy. The token exporter reads local tool
+session metadata and must not be exposed to untrusted networks. Report security-sensitive issues
+privately to the repository owner rather than opening a public issue.
 
 ## Attribution
 
