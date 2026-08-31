@@ -21,7 +21,7 @@ BIN="$OPT/bin"
 PROMETHEUS_HOME="$OPT/prometheus-${PROMETHEUS}"
 PROMETHEUS_CONFIG="$OPT/prometheus-config"
 PROMETHEUS_DATA="$OPT/prometheus-data"
-GRAFANA_HOME="$OPT/grafana-${GRAFANA}"
+GRAFANA_HOME="$OPT/grafana-${GRAFANA}-${GRAFANA_BUILD}"
 SYSTEMD_DIR="$HOME/.config/systemd/user"
 APP_CONFIG_DIR="$HOME/.config/rtx-vllm-grafana"
 TMP_DIR="$(mktemp -d -t rtx-monitoring-install.XXXXXX)"
@@ -76,8 +76,18 @@ echo "==> Grafana ${GRAFANA}"
 curl -fsSL -o "$TMP_DIR/grafana.tgz" "https://dl.grafana.com/grafana/release/${GRAFANA}/grafana_${GRAFANA}_${GRAFANA_BUILD}_linux_amd64.tar.gz"
 verify_sha256 "$GRAFANA_SHA256" "$TMP_DIR/grafana.tgz"
 tar xzf "$TMP_DIR/grafana.tgz" -C "$TMP_DIR"
-mkdir -p "$GRAFANA_HOME"
-cp -R "$TMP_DIR/grafana-${GRAFANA}/." "$GRAFANA_HOME/"
+GRAFANA_MARKER="$GRAFANA_HOME/.rtx-install-complete"
+if [[ ! -f "$GRAFANA_MARKER" ]]; then
+  if [[ -e "$GRAFANA_HOME" ]]; then
+    echo "ERROR: incomplete Grafana installation exists at $GRAFANA_HOME" >&2
+    exit 1
+  fi
+  GRAFANA_STAGE="$TMP_DIR/grafana-stage"
+  mkdir -p "$GRAFANA_STAGE"
+  cp -R "$TMP_DIR/grafana-${GRAFANA}/." "$GRAFANA_STAGE/"
+  touch "$GRAFANA_STAGE/.rtx-install-complete"
+  mv "$GRAFANA_STAGE" "$GRAFANA_HOME"
+fi
 GRAFANA_DB_MIGRATED=0
 if [[ -f "$OPT/grafana/data/grafana.db" ]] && [[ ! -e "$GRAFANA_HOME/data" ]]; then
   echo "==> retaining legacy Grafana data and credentials in place"
