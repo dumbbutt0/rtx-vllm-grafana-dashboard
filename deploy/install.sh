@@ -111,7 +111,8 @@ done
 systemctl --user daemon-reload
 
 services=(node-exporter nvidia-gpu-exporter prometheus grafana harness-tokens)
-systemctl --user enable --now "${services[@]}"
+systemctl --user enable "${services[@]}"
+systemctl --user restart "${services[@]}"
 for service in "${services[@]}"; do
   if ! systemctl --user is-active --quiet "$service"; then
     echo "ERROR: $service did not start" >&2
