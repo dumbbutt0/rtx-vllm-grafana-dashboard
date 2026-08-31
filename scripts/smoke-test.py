@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -11,17 +12,22 @@ ERRORS: list[str] = []
 
 
 def fetch(url: str, contains: str | None = None) -> bytes:
-    try:
-        with urllib.request.urlopen(url, timeout=10) as response:
-            body = response.read()
-            if response.status != 200:
-                ERRORS.append(f"{url}: HTTP {response.status}")
-            if contains is not None and contains.encode() not in body:
-                ERRORS.append(f"{url}: response did not contain {contains!r}")
-            return body
-    except (OSError, urllib.error.URLError) as exc:
-        ERRORS.append(f"{url}: {exc}")
-        return b""
+    last_error: Exception | None = None
+    for attempt in range(20):
+        try:
+            with urllib.request.urlopen(url, timeout=10) as response:
+                body = response.read()
+                if response.status != 200:
+                    ERRORS.append(f"{url}: HTTP {response.status}")
+                if contains is not None and contains.encode() not in body:
+                    ERRORS.append(f"{url}: response did not contain {contains!r}")
+                return body
+        except (OSError, urllib.error.URLError) as exc:
+            last_error = exc
+            if attempt < 19:
+                time.sleep(0.5)
+    ERRORS.append(f"{url}: {last_error}")
+    return b""
 
 
 fetch("http://127.0.0.1:9100/metrics", "node_exporter_build_info")
