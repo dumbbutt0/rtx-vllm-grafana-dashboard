@@ -62,6 +62,10 @@ curl -fsSL -o "$TMP_DIR/prometheus.tgz" "https://github.com/prometheus/prometheu
 verify_sha256 "$PROMETHEUS_SHA256" "$TMP_DIR/prometheus.tgz"
 tar xzf "$TMP_DIR/prometheus.tgz" -C "$TMP_DIR"
 mkdir -p "$PROMETHEUS_HOME" "$PROMETHEUS_CONFIG/targets" "$PROMETHEUS_DATA"
+if [[ -d "$OPT/prometheus/data" ]] && [[ -z "$(find "$PROMETHEUS_DATA" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
+  echo "==> migrating legacy Prometheus data"
+  cp -a "$OPT/prometheus/data/." "$PROMETHEUS_DATA/"
+fi
 cp -R "$TMP_DIR/prometheus-${PROMETHEUS}.${ARCH}/." "$PROMETHEUS_HOME/"
 install -m 0644 "$HERE/prometheus.yml" "$PROMETHEUS_CONFIG/prometheus.yml"
 install -m 0644 "$HERE/targets/"*.yml "$PROMETHEUS_CONFIG/targets/"
@@ -73,6 +77,13 @@ verify_sha256 "$GRAFANA_SHA256" "$TMP_DIR/grafana.tgz"
 tar xzf "$TMP_DIR/grafana.tgz" -C "$TMP_DIR"
 mkdir -p "$GRAFANA_HOME"
 cp -R "$TMP_DIR/grafana-v${GRAFANA}/." "$GRAFANA_HOME/"
+GRAFANA_DB_MIGRATED=0
+if [[ -f "$OPT/grafana/data/grafana.db" ]] && [[ ! -f "$GRAFANA_HOME/data/grafana.db" ]]; then
+  echo "==> migrating legacy Grafana data and credentials"
+  mkdir -p "$GRAFANA_HOME/data"
+  cp -a "$OPT/grafana/data/." "$GRAFANA_HOME/data/"
+  GRAFANA_DB_MIGRATED=1
+fi
 
 echo "==> provisioning Grafana"
 mkdir -p "$GRAFANA_HOME/conf/provisioning/datasources" "$GRAFANA_HOME/conf/provisioning/dashboards"
@@ -82,12 +93,14 @@ install -m 0644 "$ROOT/dashboards/rtx-vllm.json" "$GRAFANA_HOME/conf/provisionin
 ln -sfn "$GRAFANA_HOME" "$OPT/grafana-current"
 
 GRAFANA_PASSWORD_FILE="$APP_CONFIG_DIR/grafana.env"
-if [[ ! -f "$GRAFANA_PASSWORD_FILE" ]]; then
+if [[ ! -f "$GRAFANA_PASSWORD_FILE" ]] && [[ "$GRAFANA_DB_MIGRATED" -eq 0 ]]; then
   GRAFANA_ADMIN_PASSWORD="${GRAFANA_ADMIN_PASSWORD:-$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')}"
   printf 'GF_SECURITY_ADMIN_PASSWORD=%s\n' "$GRAFANA_ADMIN_PASSWORD" > "$GRAFANA_PASSWORD_FILE"
   chmod 600 "$GRAFANA_PASSWORD_FILE"
   echo "Grafana initial admin password: $GRAFANA_ADMIN_PASSWORD"
   echo "Save it now. It is also stored with mode 600 in $GRAFANA_PASSWORD_FILE"
+elif [[ "$GRAFANA_DB_MIGRATED" -eq 1 ]]; then
+  echo "Grafana database migrated; existing login credentials were retained."
 fi
 
 echo "==> installing systemd user units"
