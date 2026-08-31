@@ -6,7 +6,13 @@ NODE_EXPORTER=1.12.1
 NVIDIA_GPU_EXPORTER=1.14.0
 PROMETHEUS=3.14.0
 GRAFANA=13.2.0
+GRAFANA_BUILD=32077357341
 ARCH=linux-amd64
+
+NODE_EXPORTER_SHA256=b51d8a76aa2a9156a55d501aca6276fae09e262259a5e4e831d2c2222f084e63
+NVIDIA_GPU_EXPORTER_SHA256=faa18c7ca506fe1e2bd8c41a060ff27a08dd3652f59b236ae9647bc6a4c78478
+PROMETHEUS_SHA256=f665c6da19eb7ba399c915d30c7d9793c9b417bf8a749b504bc470678631478d
+GRAFANA_SHA256=4669384cdb0bb5b4a3f804927e57490d17f4cc47258cd1698fc124e99ee58265
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$HERE")"
@@ -21,27 +27,39 @@ APP_CONFIG_DIR="$HOME/.config/rtx-vllm-grafana"
 TMP_DIR="$(mktemp -d -t rtx-monitoring-install.XXXXXX)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-for command in curl tar systemctl sed python3; do
+for command in curl tar systemctl sed python3 sha256sum; do
   command -v "$command" >/dev/null 2>&1 || {
     echo "ERROR: required command not found: $command" >&2
     exit 1
   }
 done
 
+verify_sha256() {
+  local expected="$1"
+  local file="$2"
+  printf '%s  %s\n' "$expected" "$file" | sha256sum --check --status || {
+    echo "ERROR: checksum verification failed for $file" >&2
+    exit 1
+  }
+}
+
 mkdir -p "$BIN" "$OPT/src" "$SYSTEMD_DIR" "$APP_CONFIG_DIR"
 
 echo "==> node_exporter ${NODE_EXPORTER}"
 curl -fsSL -o "$TMP_DIR/node-exporter.tgz" "https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER}/node_exporter-${NODE_EXPORTER}.${ARCH}.tar.gz"
+verify_sha256 "$NODE_EXPORTER_SHA256" "$TMP_DIR/node-exporter.tgz"
 tar xzf "$TMP_DIR/node-exporter.tgz" -C "$TMP_DIR"
 install -m 0755 "$TMP_DIR/node_exporter-${NODE_EXPORTER}.${ARCH}/node_exporter" "$BIN/node_exporter"
 
 echo "==> nvidia_gpu_exporter ${NVIDIA_GPU_EXPORTER}"
 curl -fsSL -o "$TMP_DIR/nvidia-gpu-exporter.tgz" "https://github.com/utkuozdemir/nvidia_gpu_exporter/releases/download/v${NVIDIA_GPU_EXPORTER}/nvidia_gpu_exporter_${NVIDIA_GPU_EXPORTER}_linux_x86_64.tar.gz"
+verify_sha256 "$NVIDIA_GPU_EXPORTER_SHA256" "$TMP_DIR/nvidia-gpu-exporter.tgz"
 tar xzf "$TMP_DIR/nvidia-gpu-exporter.tgz" -C "$TMP_DIR"
 install -m 0755 "$TMP_DIR/nvidia_gpu_exporter" "$BIN/nvidia_gpu_exporter"
 
 echo "==> Prometheus ${PROMETHEUS}"
 curl -fsSL -o "$TMP_DIR/prometheus.tgz" "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS}/prometheus-${PROMETHEUS}.${ARCH}.tar.gz"
+verify_sha256 "$PROMETHEUS_SHA256" "$TMP_DIR/prometheus.tgz"
 tar xzf "$TMP_DIR/prometheus.tgz" -C "$TMP_DIR"
 mkdir -p "$PROMETHEUS_HOME" "$PROMETHEUS_CONFIG/targets" "$PROMETHEUS_DATA"
 cp -R "$TMP_DIR/prometheus-${PROMETHEUS}.${ARCH}/." "$PROMETHEUS_HOME/"
@@ -50,7 +68,8 @@ install -m 0644 "$HERE/targets/"*.yml "$PROMETHEUS_CONFIG/targets/"
 ln -sfn "$PROMETHEUS_HOME" "$OPT/prometheus-current"
 
 echo "==> Grafana ${GRAFANA}"
-curl -fsSL -o "$TMP_DIR/grafana.tgz" "https://dl.grafana.com/oss/release/grafana-${GRAFANA}.${ARCH}.tar.gz"
+curl -fsSL -o "$TMP_DIR/grafana.tgz" "https://dl.grafana.com/grafana/release/${GRAFANA}/grafana_${GRAFANA}_${GRAFANA_BUILD}_linux_amd64.tar.gz"
+verify_sha256 "$GRAFANA_SHA256" "$TMP_DIR/grafana.tgz"
 tar xzf "$TMP_DIR/grafana.tgz" -C "$TMP_DIR"
 mkdir -p "$GRAFANA_HOME"
 cp -R "$TMP_DIR/grafana-v${GRAFANA}/." "$GRAFANA_HOME/"
