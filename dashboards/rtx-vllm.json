@@ -1343,7 +1343,7 @@
       },
       "targets": [
         {
-          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{mode=\"idle\",rtx_gpu=\"true\"}[$__rate_interval])))",
+          "expr": "100 * (1 - avg(rate(node_cpu_seconds_total{host_id=~\"$host\", mode=\"idle\",rtx_gpu=\"true\"}[$__rate_interval])))",
           "refId": "A",
           "legendFormat": "CPU %",
           "editorMode": "code",
@@ -1427,7 +1427,7 @@
       },
       "targets": [
         {
-          "expr": "100 * (1 - node_filesystem_avail_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\",rtx_gpu=\"true\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!~\"tmpfs|overlay\",rtx_gpu=\"true\"})",
+          "expr": "100 * (1 - node_filesystem_avail_bytes{host_id=~\"$host\", mountpoint=\"/\",fstype!~\"tmpfs|overlay\",rtx_gpu=\"true\"} / node_filesystem_size_bytes{host_id=~\"$host\", mountpoint=\"/\",fstype!~\"tmpfs|overlay\",rtx_gpu=\"true\"})",
           "refId": "A",
           "legendFormat": "disk %",
           "editorMode": "code",
@@ -3233,7 +3233,7 @@
       },
       "targets": [
         {
-          "expr": "(node_load1{rtx_gpu=\"true\"} / scalar(count(count by (cpu) (node_cpu_seconds_total{mode=\"idle\",rtx_gpu=\"true\"})))) or vector(0)",
+          "expr": "(node_load1{host_id=~\"$host\", rtx_gpu=\"true\"} / scalar(count(count by (cpu) (node_cpu_seconds_total{host_id=~\"$host\", mode=\"idle\",rtx_gpu=\"true\"})))) or vector(0)",
           "refId": "A",
           "legendFormat": "load / core",
           "editorMode": "code",
@@ -3299,14 +3299,14 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_network_receive_bytes_total{host_id=~\"$host\", device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "rx bytes/sec",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate(node_network_transmit_bytes_total{device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_network_transmit_bytes_total{host_id=~\"$host\", device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "B",
           "legendFormat": "tx bytes/sec",
           "editorMode": "code",
@@ -3401,14 +3401,14 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(node_disk_read_bytes_total{rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_disk_read_bytes_total{host_id=~\"$host\", rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "read bytes/sec",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate(node_disk_written_bytes_total{rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_disk_written_bytes_total{host_id=~\"$host\", rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "B",
           "legendFormat": "write bytes/sec",
           "editorMode": "code",
@@ -3503,21 +3503,21 @@
       },
       "targets": [
         {
-          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"user\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{host_id=~\"$host\", mode=\"user\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "user %",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"system\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{host_id=~\"$host\", mode=\"system\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "B",
           "legendFormat": "system %",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "100 * avg(rate(node_cpu_seconds_total{mode=\"iowait\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "100 * avg(rate(node_cpu_seconds_total{host_id=~\"$host\", mode=\"iowait\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "C",
           "legendFormat": "iowait %",
           "editorMode": "code",
@@ -3816,14 +3816,14 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(node_network_receive_bytes_total{device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_network_receive_bytes_total{host_id=~\"$host\", device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "receive",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate(node_network_transmit_bytes_total{device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_network_transmit_bytes_total{host_id=~\"$host\", device!~\"lo|docker.*|br.*|veth.*\",rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "B",
           "legendFormat": "transmit",
           "editorMode": "code",
@@ -3958,14 +3958,14 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(node_disk_read_bytes_total{rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_disk_read_bytes_total{host_id=~\"$host\", rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "read",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate(node_disk_written_bytes_total{rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_disk_written_bytes_total{host_id=~\"$host\", rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "B",
           "legendFormat": "write",
           "editorMode": "code",
@@ -4100,14 +4100,14 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(node_disk_reads_completed_total{rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_disk_reads_completed_total{host_id=~\"$host\", rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "A",
           "legendFormat": "reads/sec",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "sum(rate(node_disk_writes_completed_total{rtx_gpu=\"true\"}[$__rate_interval]))",
+          "expr": "sum(rate(node_disk_writes_completed_total{host_id=~\"$host\", rtx_gpu=\"true\"}[$__rate_interval]))",
           "refId": "B",
           "legendFormat": "writes/sec",
           "editorMode": "code",
@@ -4242,7 +4242,7 @@
       },
       "targets": [
         {
-          "expr": "100 * (1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs\",rtx_gpu=\"true\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs\",rtx_gpu=\"true\"})",
+          "expr": "100 * (1 - node_filesystem_avail_bytes{host_id=~\"$host\", fstype!~\"tmpfs|overlay|squashfs\",rtx_gpu=\"true\"} / node_filesystem_size_bytes{host_id=~\"$host\", fstype!~\"tmpfs|overlay|squashfs\",rtx_gpu=\"true\"})",
           "refId": "A",
           "legendFormat": "{{mountpoint}}",
           "editorMode": "code",
@@ -4380,7 +4380,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_temperature_gpu{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_temperature_gpu{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -4449,7 +4449,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_power_draw_watts{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_power_draw_watts{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -4518,7 +4518,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_utilization_gpu_ratio{rtx_gpu=\"true\"} * 100",
+          "expr": "nvidia_smi_utilization_gpu_ratio{uuid=~\"$gpu\", rtx_gpu=\"true\"} * 100",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -4587,7 +4587,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_memory_used_bytes{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_memory_used_bytes{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -4689,7 +4689,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_temperature_gpu{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_temperature_gpu{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -4791,7 +4791,7 @@
       },
       "targets": [
         {
-          "expr": "(1 - nvidia_smi_power_draw_watts{rtx_gpu=\"true\"} / nvidia_smi_power_limit_watts{rtx_gpu=\"true\"}) * 100",
+          "expr": "(1 - nvidia_smi_power_draw_watts{uuid=~\"$gpu\", rtx_gpu=\"true\"} / nvidia_smi_power_limit_watts{uuid=~\"$gpu\", rtx_gpu=\"true\"}) * 100",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -4924,14 +4924,14 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_clocks_current_sm_clock_hz{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_clocks_current_sm_clock_hz{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}} current",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "nvidia_smi_clocks_max_sm_clock_hz{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_clocks_max_sm_clock_hz{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "B",
           "legendFormat": "{{host_id}} max",
           "editorMode": "code",
@@ -5033,7 +5033,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_utilization_gpu_ratio{rtx_gpu=\"true\"} * 100",
+          "expr": "nvidia_smi_utilization_gpu_ratio{uuid=~\"$gpu\", rtx_gpu=\"true\"} * 100",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -5135,14 +5135,14 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_memory_used_bytes{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_memory_used_bytes{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}} used",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "nvidia_smi_memory_total_bytes{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_memory_total_bytes{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "B",
           "legendFormat": "{{host_id}} total",
           "editorMode": "code",
@@ -5244,14 +5244,14 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_utilization_memory_ratio{rtx_gpu=\"true\"} * 100",
+          "expr": "nvidia_smi_utilization_memory_ratio{uuid=~\"$gpu\", rtx_gpu=\"true\"} * 100",
           "refId": "A",
           "legendFormat": "{{host_id}} mem",
           "editorMode": "code",
           "range": true
         },
         {
-          "expr": "nvidia_smi_utilization_encoder_ratio{rtx_gpu=\"true\"} * 100",
+          "expr": "nvidia_smi_utilization_encoder_ratio{uuid=~\"$gpu\", rtx_gpu=\"true\"} * 100",
           "refId": "B",
           "legendFormat": "{{host_id}} enc",
           "editorMode": "code",
@@ -5333,7 +5333,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_compute_apps{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_compute_apps{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -5435,7 +5435,7 @@
       },
       "targets": [
         {
-          "expr": "nvidia_smi_compute_apps{rtx_gpu=\"true\"}",
+          "expr": "nvidia_smi_compute_apps{uuid=~\"$gpu\", rtx_gpu=\"true\"}",
           "refId": "A",
           "legendFormat": "{{host_id}}",
           "editorMode": "code",
@@ -6348,7 +6348,48 @@
     "gpu-activity"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "name": "host",
+        "label": "Node",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(node_uname_info, host_id)",
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      },
+      {
+        "name": "gpu",
+        "label": "GPU",
+        "type": "query",
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        },
+        "query": "label_values(nvidia_smi_temperature_gpu, uuid)",
+        "refresh": 2,
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "sort": 1
+      }
+    ]
   },
   "time": {
     "from": "now-15m",

@@ -3,29 +3,28 @@ global:
   evaluation_interval: 10s
 
 scrape_configs:
+  # --- per-node GPU stack, one file per exporter (file_sd) ---
+  # Add/remove a node by editing targets/vllm.yml, targets/node-exporter.yml,
+  # and targets/gpu-exporter.yml. Each entry carries host_id (legend label) +
+  # rtx_gpu="true" (scopes the GPU panels).
   - job_name: vllm
     metrics_path: /metrics
-    static_configs:
-      - targets: ["127.0.0.1:8000"]
-        labels:
-          host_id: "rtx-3070"
-          rtx_gpu: "true"
+    file_sd_configs:
+      - files: ["targets/vllm.yml"]
+        refresh_interval: 1m
 
   - job_name: node-exporter
-    static_configs:
-      - targets: ["127.0.0.1:9100"]
-        labels:
-          host_id: "rtx-3070"
-          rtx_gpu: "true"
+    file_sd_configs:
+      - files: ["targets/node-exporter.yml"]
+        refresh_interval: 1m
 
   - job_name: gpu-exporter
     scrape_interval: 10s
-    static_configs:
-      - targets: ["127.0.0.1:9835"]
-        labels:
-          host_id: "rtx-3070"
-          rtx_gpu: "true"
+    file_sd_configs:
+      - files: ["targets/gpu-exporter.yml"]
+        refresh_interval: 1m
 
+  # --- WSL-local services (single instance on the monitoring host) ---
   - job_name: harness-tokens
     scrape_interval: 120s
     scrape_timeout: 30s

@@ -27,6 +27,10 @@ for p in d["panels"]:
 
 def run_query(expr):
     expr = expr.replace("$__rate_interval", "5m").replace("$__range", "1h")
+    # substitute multi-node/GPU template vars with their "All" value (Grafana
+    # does this at render time; the validator must mirror it).
+    expr = expr.replace('"$host"', '".*"').replace("$host", ".*")
+    expr = expr.replace('"$gpu"', '".*"').replace("$gpu", ".*")
     payload = {
         "queries": [{
             "refId": "A",

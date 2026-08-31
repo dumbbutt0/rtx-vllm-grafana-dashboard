@@ -337,6 +337,67 @@ d["panels"] = [_cost_row] + _cost_stats + [_model_row] + _model_panels + d["pane
 
 # --- metadata ---
 d["title"] = "NVIDIA RTX GPU — vLLM Throughput, GPU Hardware, Activity & Tool Tokens"
+
+# --- template variables: multi-node / multi-GPU selection ---
+# $host = node (host_id), $gpu = GPU (uuid). Queries are scoped with these so a
+# second node/GPU just adds rows to the dropdowns — no per-node panel edits.
+_ds_ref = {"type": "prometheus", "uid": "prometheus"}
+d["templating"] = {
+    "list": [
+        {
+            "name": "host",
+            "label": "Node",
+            "type": "query",
+            "datasource": _ds_ref,
+            "query": 'label_values(node_uname_info, host_id)',
+            "refresh": 2,
+            "includeAll": True,
+            "allValue": ".*",
+            "multi": True,
+            "current": {"selected": False, "text": "All", "value": "$__all"},
+            "sort": 1,
+        },
+        {
+            "name": "gpu",
+            "label": "GPU",
+            "type": "query",
+            "datasource": _ds_ref,
+            "query": 'label_values(nvidia_smi_temperature_gpu, uuid)',
+            "refresh": 2,
+            "includeAll": True,
+            "allValue": ".*",
+            "multi": True,
+            "current": {"selected": False, "text": "All", "value": "$__all"},
+            "sort": 1,
+        },
+    ]
+}
+
+# Scope queries to $host / $gpu. Node + GPU panels carry rtx_gpu="true" and a
+# host_id label; GPU panels additionally carry uuid. Inject the variable filters
+# so a second node/GPU is selectable without per-panel edits.
+def scope_vars(expr):
+    e = expr
+    if "nvidia_smi_" in e and 'uuid' not in e and "nvidia_smi_compute_app_info" not in e:
+        # GPU metric: add uuid=~"$gpu" and host_id=~"$host" to the selector
+        e = re.sub(r'(nvidia_smi_[a-z0-9_]+)\{', r'\1{uuid=~"$gpu", ', e)
+    if "node_" in e and 'host_id' not in e:
+        e = re.sub(r'(node_[a-z0-9_]+)\{', r'\1{host_id=~"$host", ', e)
+    return e
+
+def walk_scope(obj):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k == "expr" and isinstance(v, str):
+                obj[k] = scope_vars(v)
+            else:
+                walk_scope(v)
+    elif isinstance(obj, list):
+        for it in obj:
+            walk_scope(it)
+
+walk_scope(d["panels"])
+
 if d.get("tags"):
     d["tags"] = [t for t in d["tags"] if t != "dgx-spark"] + ["rtx", "vllm", "gpu-activity"]
 else:

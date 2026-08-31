@@ -1,0 +1,6 @@
+# node_exporter, one per node (port 9100).
+- targets:
+    - "127.0.0.1:9100"
+  labels:
+    host_id: "rtx-3070"
+    rtx_gpu: "true"
