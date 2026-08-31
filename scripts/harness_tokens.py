@@ -188,15 +188,61 @@ def _codex_parse(path):
     return d
 
 
-def collect_codex():
-    roots = [os.path.expanduser("~/.codex/sessions"),
-             "/mnt/c/Users/user/.codex/sessions"]
-    for home in [os.path.expanduser("~/.codex"), "/mnt/c/Users/user/.codex"]:
-        arch = os.path.join(home, "archived_sessions")
-        if os.path.isdir(arch):
-            roots.append(arch)
-    files = []
+def _windows_homes():
+    """Yield candidate Windows user-profile roots visible from WSL (/mnt/c/Users/*).
+    Used to auto-discover the Codex desktop app and Hermes state on the Windows
+    host without hardcoding a username."""
+    try:
+        base = "/mnt/c/Users"
+        for name in os.listdir(base):
+            p = os.path.join(base, name)
+            if name.lower() in ("public", "default", "all users", "default user"):
+                continue
+            if os.path.isdir(p):
+                yield p
+    except OSError:
+        return
+
+
+def codex_roots():
+    """Return all plausible Codex session roots: WSL home, every Windows user
+    profile, plus archived_sessions — overridable via CODEX_HOME (colon-separated)."""
+    roots = []
+    env = os.environ.get("CODEX_HOME", "")
+    for p in env.split(":") if env else []:
+        if p:
+            roots.append(os.path.join(p, "sessions"))
+    roots.append(os.path.expanduser("~/.codex/sessions"))
+    for win in _windows_homes():
+        roots.append(os.path.join(win, ".codex", "sessions"))
+    # archived_sessions under each candidate home
+    homes = [os.path.expanduser("~/.codex")]
+    homes += [os.path.join(w, ".codex") for w in _windows_homes()]
+    for home in homes:
+        roots.append(os.path.join(home, "archived_sessions"))
+    # de-dup, keep order
+    seen = set()
+    out = []
     for r in roots:
+        if r and r not in seen:
+            seen.add(r)
+            out.append(r)
+    return out
+
+
+def hermes_db_candidates():
+    """Candidate Hermes state.db paths, in order, overridable via HERMES_HOME."""
+    env = os.environ.get("HERMES_HOME", "")
+    if env:
+        yield os.path.join(env, "state.db")
+    yield os.path.expanduser("~/.hermes/state.db")
+    for win in _windows_homes():
+        yield os.path.join(win, "AppData", "Local", "hermes", "state.db")
+
+
+def collect_codex():
+    files = []
+    for r in codex_roots():
         if os.path.isdir(r):
             files.extend(glob.glob(r + "/**/*.jsonl", recursive=True))
 
@@ -385,8 +431,7 @@ def main():
 
     hermes_db = args.hermes_db
     if not hermes_db:
-        for cand in ["/mnt/c/Users/user/AppData/Local/hermes/state.db",
-                     os.path.expanduser("~/.hermes/state.db")]:
+        for cand in hermes_db_candidates():
             if os.path.exists(cand):
                 hermes_db = cand
                 break

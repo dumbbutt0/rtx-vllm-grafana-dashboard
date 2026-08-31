@@ -145,10 +145,18 @@ isn't running** — driven by a `harness_active` flag (recent activity OR runnin
 | Tool | Data source | Notes |
 |---|---|---|
 | Pi | `~/.pi/agent/sessions/*.jsonl` | clean `usage{input,output,cacheRead,...}` + cost |
-| Codex (CLI + desktop) | `~/.codex/sessions` + `/mnt/c/Users/<u>/.codex/sessions` | `payload.info.last_token_usage` (per-turn); **recent-activity** window, not all-time — long desktop rollouts report implausible cumulative totals |
+| Codex (CLI + desktop) | `~/.codex/sessions` + `/mnt/c/Users/<u>/.codex/sessions` (auto-detected) | `payload.info.last_token_usage` (per-turn); **recent-activity** window, not all-time — long desktop rollouts report implausible cumulative totals |
 | Hermes | `state.db` (SQLite, copied read-only) | `sessions` table: `input_tokens`, `output_tokens`, `cache_*`, `estimated_cost_usd` |
 | Ollama | `localhost:11434/api/tags` + `/api/ps` | **no token metrics** — shows installed + loaded models only |
 | Claude Code | OTLP `prometheus` exporter (`:9464`) | accurate; JSONL is broken (~100× undercount). See below. |
+
+Codex and Hermes paths are **auto-discovered** (WSL home + every `/mnt/c/Users/*` Windows
+profile); override with the `CODEX_HOME` / `HERMES_HOME` env vars if your layout differs.
+
+> **Cost figures are estimates.** `harness_cost_usd_total` comes from each tool's own
+> `estimated_cost_usd`/`cost` fields, which are pricing-table estimates that can drift
+> between sessions (and Codex reports $0 — it doesn't emit pricing). Treat them as
+> directional, not billing-accurate. Token counts are authoritative.
 
 **Graceful errors:** every source is read independently — a missing/​unreadable source (Pi's
 dir gone, Hermes DB locked, Ollama not installed, a session file mid-write) degrades to empty
