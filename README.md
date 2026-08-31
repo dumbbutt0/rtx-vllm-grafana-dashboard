@@ -2,6 +2,8 @@
 
 A Grafana dashboard and self-contained monitoring stack for **any NVIDIA RTX (GeForce) GPU** running [vLLM](https://github.com/vllm-project/vllm), plus per-process GPU activity so you can see *what's using your GPU right now* — and a **per-tool token tracker** for Pi, Codex (CLI + desktop app), Hermes, Claude Code, and Ollama.
 
+> **New installation?** Start with the copy-paste [WSL2 quickstart](QUICKSTART.md).
+
 Ported from [`RodriMora/dgx-spark-grafana-dashboard`](https://github.com/RodriMora/dgx-spark-grafana-dashboard) (which targeted the NVIDIA **DGX Spark**, a GB10 workstation). That original assumes DGX-only telemetry — thermal-limit, throttle-reason counters, unified CPU/GPU memory — none of which exist on a consumer GeForce card. This fork adapts it to RTX, adds a "GPU Activity" row and a "Apps in use & tokens" row, and drops the dead sections (cloud-equivalent cost cards, spec-decode panels).
 
 ![dashboard](screenshots/dashboard.png)
@@ -50,11 +52,13 @@ The **GPU Activity** row is the reason this works for *any* app, not just vLLM: 
 | Prometheus | → `:9090` |
 | Grafana | → `:3001` (3000 is commonly taken) |
 | vLLM + a quantized model | see [vLLM setup](#vllm-setup) |
-| `build-essential` (gcc/g++/make) | one-time, for vLLM's JIT kernels |
+| `uv` + `build-essential` | optional; required only for the vLLM setup |
 
 ---
 
 ## Install
+
+For a first installation, follow [QUICKSTART.md](QUICKSTART.md). The condensed commands below assume the repository is already cloned and the prerequisites have passed.
 
 ### 1. Monitoring stack (sudo-free)
 
@@ -170,7 +174,9 @@ profile); override with the `CODEX_HOME` / `HERMES_HOME` env vars if your layout
 > **Cost figures are estimates.** `harness_cost_usd_total` comes from each tool's own
 > `estimated_cost_usd`/`cost` fields, which are pricing-table estimates that can drift
 > between sessions (and Codex reports $0 — it doesn't emit pricing). Treat them as
-> directional, not billing-accurate. Token counts are authoritative.
+> directional, not billing-accurate. Pi and Hermes totals reflect their local records; Codex is a
+recent-activity estimate assembled from the latest per-turn usage in rollouts touched within 24
+hours. None of these metrics should be treated as a billing ledger.
 
 **Graceful errors:** every source is read independently — a missing/​unreadable source (Pi's
 dir gone, Hermes DB locked, Ollama not installed, a session file mid-write) degrades to empty
@@ -180,7 +186,7 @@ data rather than failing the scrape. The collector always returns HTTP 200, and 
 drops the connection.
 
 **Claude Code caveat:** its JSONL `usage.input_tokens` is a known-unfixed placeholder (undercounts
-~100×). The reliable path is OTLP — set in `~/.bashrc` (already added by the installer):
+~100×). The reliable path is OTLP. Add the following to your shell environment if you use Claude Code telemetry:
 
 ```bash
 export CLAUDE_CODE_ENABLE_TELEMETRY=1
