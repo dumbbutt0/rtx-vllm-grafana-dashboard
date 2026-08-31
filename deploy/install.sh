@@ -18,7 +18,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(dirname "$HERE")"
 OPT="$HOME/opt"
 BIN="$OPT/bin"
-PROMETHEUS_HOME="$OPT/prometheus-${PROMETHEUS}"
+PROMETHEUS_HOME="$OPT/prometheus-${PROMETHEUS}-${PROMETHEUS_SHA256:0:12}"
 PROMETHEUS_CONFIG="$OPT/prometheus-config"
 PROMETHEUS_DATA="$OPT/prometheus-data"
 GRAFANA_HOME="$OPT/grafana-${GRAFANA}-${GRAFANA_BUILD}"
@@ -61,13 +61,24 @@ echo "==> Prometheus ${PROMETHEUS}"
 curl -fsSL -o "$TMP_DIR/prometheus.tgz" "https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS}/prometheus-${PROMETHEUS}.${ARCH}.tar.gz"
 verify_sha256 "$PROMETHEUS_SHA256" "$TMP_DIR/prometheus.tgz"
 tar xzf "$TMP_DIR/prometheus.tgz" -C "$TMP_DIR"
-mkdir -p "$PROMETHEUS_HOME" "$PROMETHEUS_CONFIG/targets"
+PROMETHEUS_MARKER="$PROMETHEUS_HOME/.rtx-install-complete"
+if [[ ! -f "$PROMETHEUS_MARKER" ]]; then
+  if [[ -e "$PROMETHEUS_HOME" ]]; then
+    echo "ERROR: incomplete Prometheus installation exists at $PROMETHEUS_HOME" >&2
+    exit 1
+  fi
+  PROMETHEUS_STAGE="$TMP_DIR/prometheus-stage"
+  mkdir -p "$PROMETHEUS_STAGE"
+  cp -R "$TMP_DIR/prometheus-${PROMETHEUS}.${ARCH}/." "$PROMETHEUS_STAGE/"
+  touch "$PROMETHEUS_STAGE/.rtx-install-complete"
+  mv "$PROMETHEUS_STAGE" "$PROMETHEUS_HOME"
+fi
+mkdir -p "$PROMETHEUS_CONFIG/targets"
 if [[ -d "$OPT/prometheus/data" ]] && [[ ! -e "$PROMETHEUS_DATA" ]]; then
   echo "==> retaining legacy Prometheus data in place"
   ln -s "$OPT/prometheus/data" "$PROMETHEUS_DATA"
 fi
 mkdir -p "$PROMETHEUS_DATA"
-cp -R "$TMP_DIR/prometheus-${PROMETHEUS}.${ARCH}/." "$PROMETHEUS_HOME/"
 install -m 0644 "$HERE/prometheus.yml" "$PROMETHEUS_CONFIG/prometheus.yml"
 install -m 0644 "$HERE/targets/"*.yml "$PROMETHEUS_CONFIG/targets/"
 ln -sfn "$PROMETHEUS_HOME" "$OPT/prometheus-current"
