@@ -51,8 +51,10 @@ if targets_body:
             health = states.get(job, [])
             if not health:
                 ERRORS.append(f"Prometheus has no active target for required job {job}")
-            elif any(state != "up" for state in health):
-                ERRORS.append(f"Prometheus job {job} is not fully up: {health}")
+            elif any(state == "down" for state in health):
+                ERRORS.append(f"Prometheus job {job} has a down target: {health}")
+            elif any(state == "unknown" for state in health):
+                print(f"required target {job}: reachable directly; awaiting first Prometheus scrape")
         for job in ("vllm", "claude-code"):
             health = states.get(job, [])
             status = ",".join(health) if health else "not configured"
