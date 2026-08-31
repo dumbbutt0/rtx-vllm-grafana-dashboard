@@ -3,12 +3,12 @@ Description=Grafana
 After=network.target
 
 [Service]
-Environment=GRAFANA_HOME=%h/opt/grafana
+Environment=GRAFANA_HOME=%h/opt/grafana-current
 Environment=GF_SERVER_HTTP_ADDR=127.0.0.1
 Environment=GF_SERVER_HTTP_PORT=3001
 Environment=GF_SECURITY_ADMIN_USER=admin
 EnvironmentFile=-%h/.config/rtx-vllm-grafana/grafana.env
-ExecStart=%h/opt/grafana/bin/grafana server --homepath=%h/opt/grafana
+ExecStart=%h/opt/grafana-current/bin/grafana server --homepath=%h/opt/grafana-current
 Restart=always
 RestartSec=3
 NoNewPrivileges=true
